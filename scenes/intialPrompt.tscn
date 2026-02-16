@@ -1,0 +1,123 @@
+[gd_scene format=3 uid="uid://dlpivbfva1xer"]
+
+[ext_resource type="Script" uid="uid://b87r2clph54bn" path="res://scripts/IntialPrompt.cs" id="1_x4k5r"]
+
+[node name="Control" type="Control" unique_id=917262971 node_paths=PackedStringArray("UsernameEntryBox", "ServerAddressEntryBox", "PortNumberAddressEntryBox")]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_x4k5r")
+UsernameEntryBox = NodePath("Username")
+ServerAddressEntryBox = NodePath("ServerAddress")
+PortNumberAddressEntryBox = NodePath("PortNumber")
+
+[node name="ColorRect" type="ColorRect" parent="." unique_id=1595971339]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.2627451, 0.2627451, 0.2627451, 1)
+
+[node name="Label" type="Label" parent="." unique_id=1392338732]
+layout_mode = 1
+anchors_preset = -1
+anchor_left = 0.30505556
+anchor_top = 0.074
+anchor_right = 0.68405557
+anchor_bottom = 0.19800003
+offset_left = -7.424011
+offset_top = 0.048000336
+offset_right = -0.032043457
+offset_bottom = 7.695984
+theme_override_font_sizes/font_size = 64
+text = "Best Server V2"
+metadata/_edit_use_anchors_ = true
+
+[node name="Username" type="LineEdit" parent="." unique_id=45894318]
+layout_mode = 1
+anchors_preset = -1
+anchor_left = 0.3191111
+anchor_top = 0.30900002
+anchor_right = 0.65311116
+anchor_bottom = 0.45700002
+offset_left = -7.6159973
+offset_top = -0.23200989
+offset_right = 7.615967
+offset_bottom = -0.13601685
+theme_override_font_sizes/font_size = 32
+placeholder_text = "Username"
+alignment = 1
+metadata/_edit_use_anchors_ = true
+
+[node name="ServerAddress" type="LineEdit" parent="." unique_id=1091094500]
+layout_mode = 1
+anchors_preset = -1
+anchor_left = 0.3191111
+anchor_top = 0.50600004
+anchor_right = 0.65311116
+anchor_bottom = 0.642
+offset_left = -7.6159973
+offset_top = 0.111968994
+offset_right = 7.615967
+offset_bottom = 7.9839783
+theme_override_font_sizes/font_size = 32
+text = "127.0.0.1"
+placeholder_text = "Server Address"
+alignment = 1
+metadata/_edit_use_anchors_ = true
+
+[node name="PortNumber" type="LineEdit" parent="." unique_id=1081480151]
+layout_mode = 1
+anchors_preset = -1
+anchor_left = 0.69775003
+anchor_top = 0.51900005
+anchor_right = 0.91275
+anchor_bottom = 0.642
+offset_left = -7.8080444
+offset_top = -8.312042
+offset_right = 8.511963
+offset_bottom = 7.9839783
+theme_override_font_sizes/font_size = 32
+text = "7000"
+placeholder_text = "Port"
+alignment = 1
+metadata/_edit_use_anchors_ = true
+
+[node name="Host" type="Button" parent="." unique_id=1591285292]
+layout_mode = 1
+anchors_preset = -1
+anchor_left = 0.2431111
+anchor_top = 0.79
+anchor_right = 0.4101111
+anchor_bottom = 0.91400003
+offset_left = -8.063995
+offset_top = -7.9200134
+offset_right = -0.44802856
+offset_bottom = -0.2720337
+theme_override_font_sizes/font_size = 32
+text = "Host"
+metadata/_edit_use_anchors_ = true
+
+[node name="Join" type="Button" parent="." unique_id=1290913846]
+layout_mode = 1
+anchors_preset = -1
+anchor_left = 0.5691667
+anchor_top = 0.79
+anchor_right = 0.72916675
+anchor_bottom = 0.901
+offset_left = -7.6800537
+offset_top = -7.9200134
+offset_right = 7.999939
+offset_bottom = 8.151978
+theme_override_font_sizes/font_size = 32
+text = "Join
+"
+metadata/_edit_use_anchors_ = true
+
+[connection signal="pressed" from="Host" to="." method="OnHostButtonPressed"]
+[connection signal="pressed" from="Join" to="." method="OnJoinButtonPressed"]

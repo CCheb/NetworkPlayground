@@ -1,0 +1,81 @@
+[gd_scene format=3 uid="uid://bhcfm101fekoe"]
+
+[ext_resource type="Script" uid="uid://c4sf2mdv4jjpo" path="res://scripts/UserNpm.cs" id="1_nwlpw"]
+[ext_resource type="Script" uid="uid://5xqjhwp1gnm0" path="res://scripts/network/NetID.cs" id="2_th7q1"]
+
+[sub_resource type="SceneReplicationConfig" id="SceneReplicationConfig_g67jp"]
+properties/0/path = NodePath("MultiplayerSynchronizer:IsGood")
+properties/0/spawn = true
+properties/0/replication_mode = 1
+properties/1/path = NodePath("MultiplayerSynchronizer:OwnerId")
+properties/1/spawn = true
+properties/1/replication_mode = 1
+properties/2/path = NodePath("Background/UserName:text")
+properties/2/spawn = true
+properties/2/replication_mode = 2
+properties/3/path = NodePath("Background/ReadyStatus:color")
+properties/3/spawn = true
+properties/3/replication_mode = 2
+
+[node name="Control" type="Control" unique_id=1506464466 node_paths=PackedStringArray("myNetID", "userNameLabel", "readyStatus", "readyUpButton")]
+custom_minimum_size = Vector2(0, 42)
+layout_mode = 3
+anchor_right = 0.55600005
+anchor_bottom = 0.074
+offset_right = -0.51208496
+offset_bottom = -5.9519997
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_nwlpw")
+myNetID = NodePath("MultiplayerSynchronizer")
+userNameLabel = NodePath("Background/UserName")
+readyStatus = NodePath("Background/ReadyStatus")
+readyUpButton = NodePath("Background/Ready")
+
+[node name="MultiplayerSynchronizer" type="MultiplayerSynchronizer" parent="." unique_id=2124944994]
+replication_config = SubResource("SceneReplicationConfig_g67jp")
+script = ExtResource("2_th7q1")
+
+[node name="Background" type="ColorRect" parent="." unique_id=1619657523]
+layout_mode = 0
+offset_right = 320.0
+offset_bottom = 40.0
+color = Color(0.23921569, 0.23921569, 0.23921569, 0.85882354)
+
+[node name="UserName" type="Label" parent="Background" unique_id=2057306733]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -20.0
+offset_top = -11.5
+offset_right = 20.0
+offset_bottom = 11.5
+grow_horizontal = 2
+grow_vertical = 2
+text = "John Doe"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="ReadyStatus" type="ColorRect" parent="Background" unique_id=444898866]
+layout_mode = 0
+offset_right = 40.0
+offset_bottom = 40.0
+color = Color(1, 0, 0, 1)
+
+[node name="Ready" type="Button" parent="Background" unique_id=748993981]
+visible = false
+layout_mode = 1
+anchors_preset = -1
+anchor_left = 0.56200004
+anchor_right = 0.70000005
+anchor_bottom = 0.952
+offset_left = 180.15999
+offset_right = 217.99998
+offset_bottom = 0.01599884
+toggle_mode = true
+text = "Ready Up"
+
+[connection signal="toggled" from="Background/Ready" to="." method="OnReadyUpButtonToggled"]

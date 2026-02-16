@@ -1,0 +1,96 @@
+[gd_scene format=3 uid="uid://ct7eg7h2rlms4"]
+
+[ext_resource type="Script" uid="uid://dt8udog6bxyrt" path="res://scripts/network/NetworkCore.cs" id="1_ll2xe"]
+[ext_resource type="Script" uid="uid://romm8h3g5isa" path="res://scripts/Lobby.cs" id="1_xrgmn"]
+
+[sub_resource type="SceneReplicationConfig" id="SceneReplicationConfig_xrgmn"]
+properties/0/path = NodePath("CountDown:text")
+properties/0/spawn = true
+properties/0/replication_mode = 2
+properties/1/path = NodePath("CountDown:visible")
+properties/1/spawn = true
+properties/1/replication_mode = 2
+
+[node name="Control" type="Control" unique_id=1913825445 node_paths=PackedStringArray("lobby", "countDownLabel")]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_xrgmn")
+lobby = NodePath("GridContainer")
+countDownLabel = NodePath("CountDown")
+
+[node name="MultiplayerSpawner" type="MultiplayerSpawner" parent="." unique_id=715627278]
+_spawnable_scenes = PackedStringArray("uid://bhcfm101fekoe")
+spawn_path = NodePath("../GridContainer")
+script = ExtResource("1_ll2xe")
+SpawnInexZeroOnConnect = true
+
+[node name="MultiplayerSynchronizer" type="MultiplayerSynchronizer" parent="." unique_id=2133772836]
+replication_config = SubResource("SceneReplicationConfig_xrgmn")
+
+[node name="ColorRect" type="ColorRect" parent="." unique_id=603954035]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.36471137, 0.3647114, 0.3647114, 1)
+
+[node name="LobbyTitle" type="Label" parent="." unique_id=808586693]
+layout_mode = 1
+anchors_preset = -1
+anchor_left = 0.42400002
+anchor_top = 0.074
+anchor_right = 0.58000004
+anchor_bottom = 0.21000001
+offset_left = -8.448029
+offset_top = 0.048000336
+offset_right = -0.16003418
+offset_bottom = -0.08000183
+theme_override_font_sizes/font_size = 64
+text = "Lobby"
+
+[node name="GridContainer" type="GridContainer" parent="." unique_id=666373140]
+layout_mode = 1
+anchors_preset = -1
+anchor_left = 0.36100003
+anchor_top = 0.259
+anchor_right = 0.63900006
+anchor_bottom = 0.716
+offset_left = 0.1279602
+offset_top = 0.16799927
+offset_right = -0.12805176
+offset_bottom = 0.031982422
+
+[node name="CountDown" type="Label" parent="." unique_id=497939317]
+visible = false
+layout_mode = 1
+anchors_preset = -1
+anchor_left = 0.625
+anchor_top = 0.753
+anchor_right = 0.66
+anchor_bottom = 0.87700003
+offset_top = -7.9440002
+offset_right = -0.32000732
+offset_bottom = -0.2960205
+theme_override_font_sizes/font_size = 64
+text = "5"
+
+[node name="Label" type="Label" parent="CountDown" unique_id=314598125]
+layout_mode = 1
+anchors_preset = -1
+anchor_left = -7.2000003
+anchor_top = 0.273
+anchor_right = -0.4
+anchor_bottom = 0.78400004
+offset_top = -0.024000168
+offset_right = -4.0
+offset_bottom = 0.0079956055
+theme_override_font_sizes/font_size = 32
+text = "Game Starting in:"
+
+[connection signal="PlayerJoined" from="MultiplayerSpawner" to="." method="OnPlayerJoined"]

@@ -1,0 +1,31 @@
+# Godot 4+ specific ignores
+.godot/
+/android/
+
+# Godot-specific
+.import/
+.export/
+export_presets.cfg
+
+# Mono / C# support (if you're using C# in Godot)
+.mono/
+**/.mono/
+**/obj/
+**/bin/
+**/.vs/
+**/*.csproj
+**/*.sln
+**/*.user
+**/*.csproj.user
+**/*.uid
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Godot editor-specific
+godot.env
+
+# Crash logs or temporary
+log.txt
+logs/

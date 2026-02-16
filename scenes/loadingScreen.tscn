@@ -1,0 +1,170 @@
+[gd_scene format=3 uid="uid://cky82axr2o18q"]
+
+[ext_resource type="Texture2D" uid="uid://dliebvnpvsfhl" path="res://assets/loadingSprite/1.png" id="1_27ptj"]
+[ext_resource type="Script" uid="uid://bijabn7rgxkov" path="res://scripts/LoadingScreen.cs" id="1_gofgu"]
+[ext_resource type="Texture2D" uid="uid://jdqrbnv3jty2" path="res://assets/loadingSprite/2.png" id="2_gofgu"]
+[ext_resource type="Texture2D" uid="uid://cg0be8piuyqn8" path="res://assets/loadingSprite/3.png" id="3_0k0t3"]
+[ext_resource type="Texture2D" uid="uid://1j5o7dagfjnd" path="res://assets/loadingSprite/4.png" id="4_yqugx"]
+[ext_resource type="Texture2D" uid="uid://qk2jaq5qwluo" path="res://assets/loadingSprite/5.png" id="5_l1g50"]
+[ext_resource type="Texture2D" uid="uid://bke27clqantdl" path="res://assets/loadingSprite/6.png" id="6_6uyk3"]
+[ext_resource type="Texture2D" uid="uid://bpcepv43ajxvh" path="res://assets/loadingSprite/7.png" id="7_x7c7a"]
+[ext_resource type="Texture2D" uid="uid://bgjps5tcqhm4k" path="res://assets/loadingSprite/8.png" id="8_7jod3"]
+[ext_resource type="Texture2D" uid="uid://h5ltpbat8hqm" path="res://assets/loadingSprite/9.png" id="9_oesc6"]
+[ext_resource type="Texture2D" uid="uid://ce4yf3legib1m" path="res://assets/loadingSprite/10.png" id="10_wsew6"]
+[ext_resource type="Texture2D" uid="uid://cvhtc5k0freip" path="res://assets/loadingSprite/11.png" id="11_bd8c2"]
+[ext_resource type="Texture2D" uid="uid://cu8f85mto8qmv" path="res://assets/loadingSprite/12.png" id="12_0lhc6"]
+[ext_resource type="Texture2D" uid="uid://cik2pmbduw44k" path="res://assets/loadingSprite/13.png" id="13_qc63d"]
+[ext_resource type="Texture2D" uid="uid://fu3w6npe36y7" path="res://assets/loadingSprite/14.png" id="14_ydu8c"]
+[ext_resource type="Texture2D" uid="uid://b8jknd8uugh52" path="res://assets/loadingSprite/15.png" id="15_311rb"]
+[ext_resource type="Texture2D" uid="uid://pxj2b5fo7gl0" path="res://assets/loadingSprite/16.png" id="16_5c7u6"]
+[ext_resource type="Texture2D" uid="uid://b0icrawfh1css" path="res://assets/loadingSprite/17.png" id="17_je2mp"]
+[ext_resource type="Texture2D" uid="uid://clcbfw83k0cyd" path="res://assets/loadingSprite/18.png" id="18_3f5vl"]
+[ext_resource type="Texture2D" uid="uid://b3g2gwx80t08c" path="res://assets/loadingSprite/19.png" id="19_by0l6"]
+[ext_resource type="Texture2D" uid="uid://d1t1bxulsjw87" path="res://assets/loadingSprite/20.png" id="20_2mxxh"]
+[ext_resource type="Texture2D" uid="uid://donlfcdhn7jsm" path="res://assets/loadingSprite/21.png" id="21_tad41"]
+[ext_resource type="Texture2D" uid="uid://knifvrws8r3a" path="res://assets/loadingSprite/22.png" id="22_yjhna"]
+[ext_resource type="Texture2D" uid="uid://b0r2sg2j0c1ku" path="res://assets/loadingSprite/23.png" id="23_cj8p0"]
+[ext_resource type="Texture2D" uid="uid://sjynw3pf6poe" path="res://assets/loadingSprite/24.png" id="24_3h04h"]
+[ext_resource type="Texture2D" uid="uid://lauo2adr740o" path="res://assets/loadingSprite/25.png" id="25_bpy7u"]
+[ext_resource type="Texture2D" uid="uid://ba6wdu885wnw3" path="res://assets/loadingSprite/26.png" id="26_1sul3"]
+[ext_resource type="Texture2D" uid="uid://d01xl7wpky5r0" path="res://assets/loadingSprite/27.png" id="27_qm407"]
+[ext_resource type="Texture2D" uid="uid://ckrt28jilr7ou" path="res://assets/loadingSprite/28.png" id="28_3wyy2"]
+[ext_resource type="Texture2D" uid="uid://d2pjmq7ruihos" path="res://assets/loadingSprite/29.png" id="29_fxyyg"]
+[ext_resource type="Texture2D" uid="uid://dyoywo8nw53qw" path="res://assets/loadingSprite/30.png" id="30_ki6bp"]
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_clfen"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("1_27ptj")
+}, {
+"duration": 1.0,
+"texture": ExtResource("2_gofgu")
+}, {
+"duration": 1.0,
+"texture": ExtResource("3_0k0t3")
+}, {
+"duration": 1.0,
+"texture": ExtResource("4_yqugx")
+}, {
+"duration": 1.0,
+"texture": ExtResource("5_l1g50")
+}, {
+"duration": 1.0,
+"texture": ExtResource("6_6uyk3")
+}, {
+"duration": 1.0,
+"texture": ExtResource("7_x7c7a")
+}, {
+"duration": 1.0,
+"texture": ExtResource("8_7jod3")
+}, {
+"duration": 1.0,
+"texture": ExtResource("9_oesc6")
+}, {
+"duration": 1.0,
+"texture": ExtResource("10_wsew6")
+}, {
+"duration": 1.0,
+"texture": ExtResource("11_bd8c2")
+}, {
+"duration": 1.0,
+"texture": ExtResource("12_0lhc6")
+}, {
+"duration": 1.0,
+"texture": ExtResource("13_qc63d")
+}, {
+"duration": 1.0,
+"texture": ExtResource("14_ydu8c")
+}, {
+"duration": 1.0,
+"texture": ExtResource("15_311rb")
+}, {
+"duration": 1.0,
+"texture": ExtResource("16_5c7u6")
+}, {
+"duration": 1.0,
+"texture": ExtResource("17_je2mp")
+}, {
+"duration": 1.0,
+"texture": ExtResource("18_3f5vl")
+}, {
+"duration": 1.0,
+"texture": ExtResource("19_by0l6")
+}, {
+"duration": 1.0,
+"texture": ExtResource("20_2mxxh")
+}, {
+"duration": 1.0,
+"texture": ExtResource("21_tad41")
+}, {
+"duration": 1.0,
+"texture": ExtResource("22_yjhna")
+}, {
+"duration": 1.0,
+"texture": ExtResource("23_cj8p0")
+}, {
+"duration": 1.0,
+"texture": ExtResource("24_3h04h")
+}, {
+"duration": 1.0,
+"texture": ExtResource("25_bpy7u")
+}, {
+"duration": 1.0,
+"texture": ExtResource("26_1sul3")
+}, {
+"duration": 1.0,
+"texture": ExtResource("27_qm407")
+}, {
+"duration": 1.0,
+"texture": ExtResource("28_3wyy2")
+}, {
+"duration": 1.0,
+"texture": ExtResource("29_fxyyg")
+}, {
+"duration": 1.0,
+"texture": ExtResource("30_ki6bp")
+}],
+"loop": true,
+"name": &"default",
+"speed": 30.0
+}]
+
+[node name="Control" type="Control" unique_id=851925144]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_gofgu")
+
+[node name="ColorRect" type="ColorRect" parent="." unique_id=1709919603]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.27752772, 0.27752772, 0.27752772, 1)
+
+[node name="Label" type="Label" parent="." unique_id=722494251]
+layout_mode = 1
+anchors_preset = -1
+anchor_left = 0.24305555
+anchor_top = 0.296
+anchor_right = 0.76000005
+anchor_bottom = 0.56600004
+offset_top = 0.19200134
+offset_right = -0.52008057
+offset_bottom = 0.23196411
+theme_override_font_sizes/font_size = 128
+text = "Loading..."
+metadata/_edit_use_anchors_ = true
+
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="." unique_id=425844378]
+position = Vector2(560, 488)
+sprite_frames = SubResource("SpriteFrames_clfen")
+autoplay = "default"
+frame = 10
+frame_progress = 0.355925

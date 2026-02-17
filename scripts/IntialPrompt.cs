@@ -43,6 +43,7 @@ public partial class IntialPrompt : Control
 
 	private void OnHostButtonPressed()
 	{
+		GenericCore.Instance.ParseInitialPromptInfo(UsernameEntryBox.Text, ServerAddressEntryBox.Text, PortNumberAddressEntryBox.Text.ToInt());
 		Error err = GenericCore.Instance.CreateGame();
 		if(err != Error.Ok)
 			GD.PushWarning("Tried to create server but failed");

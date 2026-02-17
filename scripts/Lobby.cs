@@ -146,7 +146,7 @@ public partial class Lobby : Control
 	        }
 
 	        GenericCore.Instance._netObjects.Clear();
-			GenericCore.Instance._netObjectsCount = 0;
+			//GenericCore.Instance._netObjectsCount = 0;
 	    }
 
 	    // Wait one frame so Godot fully processes the frees
@@ -159,8 +159,5 @@ public partial class Lobby : Control
 
 	    GetTree().ChangeSceneToFile(gameScenePath);
 	}
-	
-	
-
 
 }

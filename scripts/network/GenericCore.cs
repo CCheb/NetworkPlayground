@@ -1,9 +1,5 @@
 using Godot;
 using Godot.Collections;
-using System;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 public partial class GenericCore : Node
 {
@@ -28,10 +24,6 @@ public partial class GenericCore : Node
     private int _portMinimum = 7010;
     private int _portMaximum = 7000;
 
-    [Export]
-    public string PublicIP;
-    [Export]
-    public string PrivateIP;
     private string _serverAddress = "127.0.0.1";
     private int _maxClientConnections = 4;
 
@@ -43,33 +35,14 @@ public partial class GenericCore : Node
         { "UserName", "John Doe"}
     };
 
-    [Export]
-    public Dictionary<int, NetID> _netObjects = new();
-    public  uint _netObjectsCount;
-    private Godot.Collections.Array<Node> nodesForErase = new Godot.Collections.Array<Node>();
+    public Dictionary<int, NetID> _netObjects = new();  // Server will be only one to see netObjects
+    private Array<Node> nodesForErase = new Array<Node>();
 
     public static GenericCore Instance { get; private set; }
     public bool IsServer;
     public bool PeerConnected;
 
     private int _playersLoaded = 0;
-    struct NetworkPing
-    {
-        public System.Net.NetworkInformation.Ping ping;
-        public System.Net.NetworkInformation.PingOptions pingOption;
-
-        public NetworkPing()
-        {
-            ping = new System.Net.NetworkInformation.Ping();
-            pingOption = new System.Net.NetworkInformation.PingOptions(0,true);
-        }
-    }
-
-    public long GetServerNetId()
-    {
-        // Each peer is first in the _connectedPeers dictionary
-        return _connectedPeers.First().Key;
-    }
 
     public override void _Ready()
     {
@@ -111,68 +84,6 @@ public partial class GenericCore : Node
                 CreateGame();
             }
         }
-    }
-
-    public async Task JoinWan()
-    {
-        GD.Print("Attempting to connect to public IP.");
-        GD.Print("Trying Public IP Address: " + PublicIP.ToString());
-
-        NetworkPing networkPing = new NetworkPing();
-        System.Net.NetworkInformation.PingReply pr = SendPingTo(PublicIP, networkPing);
-        await ToSignal(GetTree().CreateTimer(1.0f), "timeout");
-        GD.Print("Ping Return: " + pr.Status.ToString());
-
-        if (pr.Status == System.Net.NetworkInformation.IPStatus.Success)
-        {
-            GD.Print("The public IP responded with a roundtrip time of: " + pr.RoundtripTime);
-            _serverAddress = PublicIP;
-            JoinGame();
-        }
-        else
-        {
-            GD.Print("The public IP failed to respond. Trying LAN");
-            JoinLAN(networkPing);
-        }
-    }
-
-    private async void JoinLAN(NetworkPing networkPing)
-    {
-        GD.Print("Trying Florida Poly Address: " + PrivateIP.ToString());
-
-        System.Net.NetworkInformation.PingReply pr = SendPingTo(PrivateIP, networkPing);
-        await ToSignal(GetTree().CreateTimer(1.0f), "timeout");
-        GD.Print("Ping Return: " + pr.Status.ToString());
-
-        if (pr.Status == System.Net.NetworkInformation.IPStatus.Success)
-        {
-            GD.Print("The Florida Poly IP responded with a roundtrip time of: " + pr.RoundtripTime);
-            _serverAddress = PrivateIP;
-            JoinGame();
-        }
-        else
-        {
-            GD.Print("The Florida Poly IP failed to respond. Defaulting to LocalHost");
-            JoinLocal();
-        }
-    }
-
-    private void JoinLocal()
-    {
-        GD.Print("Using Home Address!");
-        if (JoinGame() != Error.Ok)
-        {
-            _serverAddress = "127.0.0.1";
-            JoinGame();
-        }
-    }
-
-    private System.Net.NetworkInformation.PingReply SendPingTo(string IP, NetworkPing networkPing)
-    {
-        string data = "HELLLLOOOOO!";
-        byte[] buffer = ASCIIEncoding.ASCII.GetBytes(data);
-        int timeout = 500;
-        return  networkPing.ping.Send(IP, timeout, buffer, networkPing.pingOption);
     }
 
     public void ParseInitialPromptInfo(string userName, string serverAddress, int portNumber)
@@ -280,14 +191,6 @@ public partial class GenericCore : Node
         EmitSignalServerDisconnected();
     }
 
-    /// <summary>
-    /// This function is called from local but not run on local<br/>
-    /// This function tells the other peers (including server) that they joined the network.
-    /// 
-    /// _connectedPeers looks like:
-    /// {567 : {NETID : 567}}
-    /// </summary>
-    /// <param name="peerInfo"></param>
     [Rpc(MultiplayerApi.RpcMode.AnyPeer, TransferMode = MultiplayerPeer.TransferModeEnum.Reliable)]
     private void RegisterPeer(Dictionary<string, string> peerInfo)
     {
@@ -295,7 +198,7 @@ public partial class GenericCore : Node
         int newPeerId = Multiplayer.GetRemoteSenderId(); //Who is sending to call this function
         GD.Print($"Peer {Multiplayer.GetUniqueId()} registering peer {newPeerId}");
         if (newPeerId == 1 && !Multiplayer.IsServer())  
-            peerInfo["NetID"] = GetServerNetId().ToString();
+            peerInfo["NetID"] = Multiplayer.GetUniqueId().ToString();
         else
             peerInfo["NetID"] = newPeerId.ToString(); //Updating the dictionary for the new player
         _connectedPeers[newPeerId] = peerInfo;
@@ -308,91 +211,9 @@ public partial class GenericCore : Node
     public void RegisterObject(NetID netId)
     {
         //netId.Rpc("Initialize", 1);
-        GD.Print("NET ID INTEGER IS: " + Instance._netObjectsCount);
-        netId.netObjectID = Instance._netObjectsCount;
-        Instance._netObjects.Add((int)Instance._netObjectsCount++, netId);
-    }
-
-    public override Array<Dictionary> _GetPropertyList()
-    {
-        var propList = new Array<Dictionary>();
-
-        propList.AddRange([
-            new()
-            {
-                { "name", "_portMaximum" },
-                { "type", (int)Variant.Type.Int },
-                { "usage", (int)PropertyUsageFlags.Default },
-                { "hint", (int)PropertyHint.Range },
-                { "hint_string", "0,65535,1,hide_slider" }
-            },
-            new()
-            {
-                { "name", "_portMinimum" },
-                { "type", (int)Variant.Type.Int },
-                { "usage", (int)PropertyUsageFlags.Default },
-                { "hint", (int)PropertyHint.Range },
-                { "hint_string", "0,65535,1,hide_slider" }
-            },
-            new()
-            {
-                { "name", "_connectionPort" },
-                { "type", (int)Variant.Type.Int },
-                { "usage", (int)PropertyUsageFlags.Default },
-                { "hint", (int)PropertyHint.Range },
-                { "hint_string", "0,65535,1,hide_slider" }
-            },
-            new Dictionary()
-            {
-                { "name", "_serverAddress" },
-                { "type", (int)Variant.Type.String },
-                { "usage", (int)PropertyUsageFlags.Default },
-            },
-            new Dictionary()
-            {
-                { "name", "_maxConnections" },
-                { "type", (int)Variant.Type.Int },
-                { "usage", (int)PropertyUsageFlags.Default },
-                { "hint", (int)PropertyHint.Range },
-                { "hint_string", "0,100,1,or_greater,hide_slider" }
-            },
-            new Dictionary()
-            {
-                { "name", "_connectedPeers" },
-                { "type", (int)Variant.Type.Dictionary },
-                { "usage", (int)(PropertyUsageFlags.ReadOnly | PropertyUsageFlags.Editor) },
-                { "hint", (int)PropertyHint.TypeString },
-                {
-                    "hint_string",
-                    $"{Variant.Type.Int:D}:; {Variant.Type.Dictionary:D}/{PropertyHint.DictionaryType:D}:"
-                }
-            },
-        ]);
-
-        return propList;
-    }
-
-    public void SetConnectionPort(string s)
-    {
-        try
-        {
-            _connectionPort = int.Parse(s);
-        }
-        catch (Exception ex)
-        {
-            GD.Print($"{ex.Message}\nDefaulting to port 7000");
-            _connectionPort = 7000;
-        }
-    }
-    public void SetIP(string s)
-    {
-        _serverAddress = s;
-    }
-
-    public void JOIN_WAN_CALLBACK()
-    {
-        _connectionPort = _portMinimum;
-        //JoinWan();
+        GD.Print("NET ID INTEGER IS: " + Instance._netObjects.Count);
+        netId.netObjectID = (uint)Instance._netObjects.Count;
+        Instance._netObjects.Add(Instance._netObjects.Count, netId);
     }
 
     [Rpc(MultiplayerApi.RpcMode.AnyPeer,CallLocal = true,TransferMode = MultiplayerPeer.TransferModeEnum.Reliable)]

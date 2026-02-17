@@ -68,7 +68,7 @@ public partial class NetID : MultiplayerSynchronizer
         if(GenericCore.Instance.IsServer && OwnerId ==0)
         {
             OwnerId = 1;
-            if (GenericCore.Instance.GetServerNetId() == OwnerId)
+            if (Multiplayer.GetUniqueId() == OwnerId)
             IsLocal = true;
             //GenericCore.Instance.RegisterObject(this);
             SetMultiplayerAuthority(1); // 1 = server
@@ -120,7 +120,7 @@ public partial class NetID : MultiplayerSynchronizer
         OwnerId = peerIdOwner;
         if (peerIdOwner == 1)
             IsServer = true;
-        if (GenericCore.Instance.GetServerNetId() == OwnerId)
+        if (Multiplayer.GetUniqueId() == OwnerId)
             IsLocal = true;
         EmitSignalNetIdIsReady();
     }

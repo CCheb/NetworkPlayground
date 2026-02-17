@@ -65,10 +65,9 @@ public partial class NetworkCore : MultiplayerSpawner
             {
                 netId.IsGood = true;
                 netId.Rpc("Initialize", owner);
-                GD.Print("NET ID INTEGER IS: " + GenericCore.Instance._netObjectsCount);
-                netId.netObjectID = GenericCore.Instance._netObjectsCount;
                 netId._myNetworkCore = this;
-                GenericCore.Instance._netObjects.Add((int)GenericCore.Instance._netObjectsCount++, netId);
+                
+                GenericCore.Instance.RegisterObject(netId);
             }
         
 

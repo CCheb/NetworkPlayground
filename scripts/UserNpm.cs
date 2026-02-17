@@ -18,19 +18,17 @@ public partial class UserNpm : Control
     {
         base._ExitTree();
 		myNetID.NetIdIsReady -= OnNetIdReady;
-		GenericCore.Instance.PeerRegistered -= OnPeerRegistered;
+		GenericCore.Instance.ConnectedPeersDictionaryUpdated -= OnPeerRegistered;
     }
 	public override void _Ready()
 	{
 		myNetID.NetIdIsReady += OnNetIdReady;
-		GenericCore.Instance.PeerRegistered += OnPeerRegistered;
+		GenericCore.Instance.ConnectedPeersDictionaryUpdated += OnPeerRegistered;
 	}
 
 	// Multiplayer has multiple clocks and we cant wait for the whole system
 	private void OnNetIdReady()
 	{
-		
-		GD.Print("NetID Is ready!");
 		hasOwner = true;
 
 		if (PeerDictionaryReady())	// In the case OnNetIdReady executes after OnPeerRegistered

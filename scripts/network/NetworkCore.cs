@@ -3,64 +3,82 @@ using System;
 
 public partial class NetworkCore : MultiplayerSpawner
 {
-    [Export]
-    public bool SpawnInexZeroOnConnect;
-
-    [Signal]
-    public delegate void ExposedClientConnectedEventHandler(long peerId, Godot.Collections.Dictionary<string, string> peerInfo);
-
-    [Signal]
-    public delegate void ExposedClientDisconnectedEventHandler(long peerId);
-
     [Signal]
     public delegate void PlayerJoinedEventHandler(Node node);
+
+    [Export] 
+    public bool SpawnInexZeroOnConnect;
 
     public override void _ExitTree()
     {
         base._ExitTree();
-        GenericCore.Instance.ClientConnected -= OnClientConnected;
+        GenericCore.Instance.ClientConnectedNotifier -= OnClientConnected;
+        GenericCore.Instance.ClientDisconnectedNotifier -= OnClientDisconnected;
     }
     public override void _Ready()
     {
         base._Ready();
-        GenericCore.Instance.ClientConnected += OnClientConnected;
+        GenericCore.Instance.ClientConnectedNotifier += OnClientConnected;
+        GenericCore.Instance.ClientDisconnectedNotifier += OnClientDisconnected;
     }
 
-    public async void slowStart()
-    {
-        
-        while(GenericCore.Instance == null)
+    public void OnClientConnected(long newPeerId, Godot.Collections.Dictionary<string, string> newPeerInfo) 
+    {   
+        // Server tries to spawn something for the new client
+        if(SpawnInexZeroOnConnect && Multiplayer.IsServer())
         {
-            await ToSignal(GetTree().CreateTimer(0.5f), SceneTreeTimer.SignalName.Timeout);
+            NetCreateObject(0, new Vector3(0, 0, 0), Quaternion.Identity, newPeerId);
         }
-
-        GenericCore.Instance.ClientConnected += OnClientConnected;
-        GenericCore.Instance.ClientDisconnected += OnClientDisconnected;
-        
     }
 
-    public Node NetCreateObject(int index, Vector3 initialPosition, Quaternion rotation, long owner = -1L)
+    public void NetCreateObject(int index, Vector3 initialPosition, Quaternion rotation, long owner = -1L)
     {
         if (!Multiplayer.IsServer())
-            return null;
+            return;
+
+        Node rootNode = GetNodeFromAutoList(index);
+
+        FindRootNodeType(ref rootNode, initialPosition, rotation);
+
+        GetNode(SpawnPath).AddChild(rootNode, true);
+        
+        FindRootNodeNetID(rootNode, owner);
+        
+        EmitSignalPlayerJoined(rootNode);
+    }
+
+    private Node GetNodeFromAutoList(int index)
+    {   
         var packedScene = GD.Load<PackedScene>(_SpawnableScenes[index]);
-        var node = packedScene.Instantiate();
-        if (node is Node2D)
+        return packedScene.Instantiate();
+    }
+
+    private void FindRootNodeType(ref Node rootNode, Vector3 initialPosition, Quaternion rotation)
+    {
+        if (rootNode is Node2D node2D)
         {
-            ((Node2D)node).GlobalPosition = new Vector2(initialPosition.X, initialPosition.Y);
+            var transform = new Transform2D(0.0f, new Vector2(initialPosition.X, initialPosition.Y));
+            node2D.Transform = transform;
         }
-        if (node is Node3D)
+        if (rootNode is Node3D node3D)
+        {   
+            // We build transform since using GlobalPosition requires that the node be in the scene tree already
+            // But at this stage it has not been added yet so we set its transform matrix
+            var basis = new Basis(rotation);
+            var tranform = new Transform3D(basis, initialPosition);
+
+            node3D.Transform = tranform;
+        }
+        if (rootNode is Control control)
         {
-            GD.Print("Spawning 3d Node");
-            ((Node3D)node).GlobalPosition = initialPosition;
-            ((Node3D)node).Rotation = rotation.GetEuler();
+            control.GlobalPosition = new Vector2(initialPosition.X, initialPosition.Y);
         }
-        if (node is Control)
+    }
+
+    private void FindRootNodeNetID(Node rootNode, long owner)
+    {
+        foreach (var child in rootNode.GetChildren())
         {
-            ((Control)node).GlobalPosition = new Vector2(initialPosition.X, initialPosition.Y);
-        }
-        GetNode(SpawnPath).AddChild(node, true);
-        foreach (var child in node.GetChildren())
             if (child is NetID netId)
             {
                 netId.IsGood = true;
@@ -68,19 +86,34 @@ public partial class NetworkCore : MultiplayerSpawner
                 netId._myNetworkCore = this;
                 
                 GenericCore.Instance.RegisterObject(netId);
-            }
+            } 
+        }
+    }
+    
+    public void OnClientDisconnected(long peerId)
+    {
+        NetDestroyObject(peerId);
+    }
+    
+    // Destroys all netObjects that were owned by the peer
+    private void NetDestroyObject(long peerId)
+    {
         
+        Godot.Collections.Array<int> badObjs = FindBadObjects(peerId);
 
-        EmitSignalPlayerJoined(node);
-        return node;
+        foreach (var badObj in badObjs)
+        {
+            try {
+                GenericCore.Instance._netObjects[badObj].GetParent().QueueFree();
+                GenericCore.Instance._netObjects.Remove(badObj);
+            }
+            catch{
+                GD.PushWarning("Notice: Wrong Spawner trying to destroy object.  Not an error.");
+            }
+        }
     }
 
-    
-    /// <summary>
-    /// Destroys all netObjects that were owned by the peer
-    /// </summary>
-    /// <param name="peerId">The peerId that needs deletion</param>
-    private void NetDestroyObject(int peerId)
+    private Godot.Collections.Array<int> FindBadObjects(long peerId)
     {
         Godot.Collections.Array<int> badObjs = new();
         foreach (var i in GenericCore.Instance._netObjects.Keys)
@@ -88,26 +121,11 @@ public partial class NetworkCore : MultiplayerSpawner
             if (GenericCore.Instance._netObjects[i].OwnerId != peerId) continue;
             badObjs.Add(i);
         }
-
-        foreach (var badObj in badObjs)
-        {
-            try
-            {
-                GenericCore.Instance._netObjects[badObj].GetParent().QueueFree();
-                GenericCore.Instance._netObjects.Remove(badObj);
-            }
-            catch
-            {
-                //Wrong Spawner...
-                GD.PushWarning("Notice: Wrong Spawner trying to destroy object.  Not an error.");
-            }
-        }
+        
+        return badObjs;
     }
 
-    /// <summary>
-    /// Destroys a single NetID from the list
-    /// </summary>
-    /// <param name="netId">The netId that would be deleted</param>
+    // Destroys a single NetID from the list
     public void NetDestroyObject(NetID netId)
     {
         if(netId._myNetworkCore == null)
@@ -143,26 +161,5 @@ public partial class NetworkCore : MultiplayerSpawner
                 GD.PushWarning("Notice: Wrong Spawner trying to destroy object.  Not an error.");
             }
         }
-    }
-    
-
-    public void OnClientDisconnected(long id)
-    {
-        //NetDestroyObject((int)id);
-        EmitSignalExposedClientDisconnected(id);
-    }
-
-    public void OnClientConnected(long peerId, Godot.Collections.Dictionary<string, string> peerInfo) 
-    {
-        if(SpawnInexZeroOnConnect)
-        {
-            // Only server instance is able to spawn an object. Since this script is attached under
-            // MultiplayerSpawners it will automatically distribute this to all other peers
-            if (Multiplayer.IsServer())
-            {   // Gets called as soon as the server registers the client
-                NetCreateObject(0, new Vector3(0, 0, 0), Quaternion.Identity, peerId);
-            }
-        }
-        EmitSignalExposedClientConnected(peerId, peerInfo);
     }
 }

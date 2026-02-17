@@ -4,11 +4,11 @@ using Godot.Collections;
 public partial class GenericCore : Node
 {
     [Signal]
-    public delegate void ClientConnectedEventHandler(long peerId, Dictionary<string, string> peerInfo);
+    public delegate void ClientConnectedNotifierEventHandler(long peerId, Dictionary<string, string> peerInfo);
     [Signal]
-    public delegate void ClientDisconnectedEventHandler(long peerId);
+    public delegate void ClientDisconnectedNotifierEventHandler(long peerId);
     [Signal]
-    public delegate void ClientServerNotFoundEventHandler(Error error);
+    public delegate void ClientServerNotFoundNotifierEventHandler(Error error);
     [Signal]
     public delegate void ServerCreatedEventHandler(Dictionary<string, string> serverInfo);
     [Signal]
@@ -18,7 +18,7 @@ public partial class GenericCore : Node
     [Signal]
     public delegate void ClientConnectionOkEventHandler();
     [Signal]
-    public delegate void PeerRegisteredEventHandler(long peerId);
+    public delegate void ConnectedPeersDictionaryUpdatedEventHandler(long newPeerId);
 
     private int _connectionPort = 7000;
     private int _portMinimum = 7010;
@@ -30,7 +30,6 @@ public partial class GenericCore : Node
     public Dictionary<long, Dictionary<string, string>> _connectedPeers = new();
     private Dictionary<string, string> _localPeerInfo = new()
     {
-        // Right now we are not setting _localPeerInfo for each peer
         { "NetID", "1" },
         { "UserName", "John Doe"}
     };
@@ -41,8 +40,6 @@ public partial class GenericCore : Node
     public static GenericCore Instance { get; private set; }
     public bool IsServer;
     public bool PeerConnected;
-
-    private int _playersLoaded = 0;
 
     public override void _Ready()
     {
@@ -86,16 +83,7 @@ public partial class GenericCore : Node
         }
     }
 
-    public void ParseInitialPromptInfo(string userName, string serverAddress, int portNumber)
-    {
-        _localPeerInfo["UserName"] = userName;
-        _serverAddress = serverAddress;
-        _connectionPort = portNumber;
-    }
-
-    /// <summary>
-    /// Client starts here. This gets called when a client peer clicks the join game button
-    /// </summary>
+    // Client starts here. This gets called when a client peer clicks the join game button
     public Error JoinGame()
     {
         GD.Print($"Attempting to connect to {_serverAddress}:{_connectionPort}");
@@ -118,6 +106,7 @@ public partial class GenericCore : Node
     public Error CreateGame()
     {
         GD.Print($"Attempting to create server at {_serverAddress}:{_connectionPort}");
+
         var peer = new ENetMultiplayerPeer();
         Error error = peer.CreateServer(_connectionPort, _maxClientConnections);
         if (error != Error.Ok)
@@ -127,12 +116,12 @@ public partial class GenericCore : Node
         }
 
         GD.Print("Created Local Game");
+
         // If server, no signals get emitted since its techinically the first peer
         // Because of this we need to set things up manually by setting the _localPeerInfo
         Multiplayer.MultiplayerPeer = peer;
-        _connectedPeers[1] = _localPeerInfo;
 
-        //CheckForObjectsOnScene(GetTree().Root);
+        _connectedPeers[1] = _localPeerInfo;
         EmitSignalServerCreated(_localPeerInfo);
         
         IsServer = true;
@@ -141,10 +130,14 @@ public partial class GenericCore : Node
         return Error.Ok;
     }
 
-    /// <summary>
-    /// Sends a message to the rest of the clients to register this player.
-    /// </summary>
-    /// <param name="id"></param>
+    // Emits on local client that just connected. Emits before OnPeerConnected
+    private void OnClientConnectSuccess()
+    {
+        int peerId = Multiplayer.GetUniqueId();
+        _connectedPeers[peerId] = _localPeerInfo; 
+    }
+
+    // Sends a message to the rest of the clients to register this peer
     private void OnPeerConnected(long id)
     {
         // Plays both ways. When client connects it sends its info to other connected peers (via id)
@@ -154,67 +147,65 @@ public partial class GenericCore : Node
         GD.Print("Client Connected!");
     }
 
-    /// <summary>
-    /// Sends a message to the local instance that a client disconnected<br/>
-    /// Also removes player from connected peers table
-    /// </summary>
-    /// <param name="id"></param>
+    [Rpc(MultiplayerApi.RpcMode.AnyPeer, TransferMode = MultiplayerPeer.TransferModeEnum.Reliable)]
+    private void RegisterPeer(Dictionary<string, string> peerInfo)
+    {
+        // From the perspective of the receiver. Goes both ways
+        int newPeerId = Multiplayer.GetRemoteSenderId(); //Who is sending to call this function
+
+        GD.Print($"Peer {Multiplayer.GetUniqueId()} registering peer {newPeerId}");
+
+        if (newPeerId == 1 && !Multiplayer.IsServer())  
+            peerInfo["NetID"] = Multiplayer.GetUniqueId().ToString();
+        else
+            peerInfo["NetID"] = newPeerId.ToString(); 
+
+        //Updating the dictionary for the new player
+        _connectedPeers[newPeerId] = peerInfo;
+        EmitSignalClientConnectedNotifier(newPeerId, peerInfo); // Notify NetCore for object creation
+        EmitSignalConnectedPeersDictionaryUpdated(newPeerId);
+
+        GD.Print(_connectedPeers);
+    }
+
+    public void RegisterObject(NetID netId)
+    {
+        netId.netObjectID = (uint)Instance._netObjects.Count;
+        Instance._netObjects.Add(Instance._netObjects.Count, netId);
+    }
+    
+    // Sends a message to all connectedPeers that a client disconnected
+    // Also removes player from connected peers table
     private void OnPeerDisconnected(long id)
     {
         _connectedPeers.Remove(id);
         //Need to destroy objects.
-        EmitSignalClientDisconnected(id);
-        if (!Multiplayer.IsServer()) return;
-
-    }
-
-    private void OnClientConnectSuccess()
-    {
-        int peerId = Multiplayer.GetUniqueId();
-        // We are currently not setting the player info on itself!!!
-        _connectedPeers[peerId] = _localPeerInfo;
-        // For any UI nodes that might need to update
-        GD.Print(_connectedPeers);
-        EmitSignalClientConnected(peerId, _localPeerInfo);
+        EmitSignalClientDisconnectedNotifier(id);
     }
 
     private void OnConnectionToServerFail()
     {
-        // Reasuring that the MultiplayerPeer is null
         Multiplayer.MultiplayerPeer = null;
     }
 
     private void OnServerDisconnected()
     {
+        // null == complete network disconnecion/reset
         Multiplayer.MultiplayerPeer = null;
         _connectedPeers.Clear();
         EmitSignalServerDisconnected();
     }
 
-    [Rpc(MultiplayerApi.RpcMode.AnyPeer, TransferMode = MultiplayerPeer.TransferModeEnum.Reliable)]
-    private void RegisterPeer(Dictionary<string, string> peerInfo)
+    public void ParseInitialPromptInfo(string userName, string serverAddress, int portNumber)
     {
-        // From the perspective of the receiver
-        int newPeerId = Multiplayer.GetRemoteSenderId(); //Who is sending to call this function
-        GD.Print($"Peer {Multiplayer.GetUniqueId()} registering peer {newPeerId}");
-        if (newPeerId == 1 && !Multiplayer.IsServer())  
-            peerInfo["NetID"] = Multiplayer.GetUniqueId().ToString();
-        else
-            peerInfo["NetID"] = newPeerId.ToString(); //Updating the dictionary for the new player
-        _connectedPeers[newPeerId] = peerInfo;
-        EmitSignalClientConnected(newPeerId, peerInfo); //Update local instance to new player
-        EmitSignalPeerRegistered(newPeerId);
-        GD.Print(_connectedPeers);
-
+        _localPeerInfo["UserName"] = userName;
+        _serverAddress = serverAddress;
+        _connectionPort = portNumber;
     }
 
-    public void RegisterObject(NetID netId)
-    {
-        //netId.Rpc("Initialize", 1);
-        GD.Print("NET ID INTEGER IS: " + Instance._netObjects.Count);
-        netId.netObjectID = (uint)Instance._netObjects.Count;
-        Instance._netObjects.Add(Instance._netObjects.Count, netId);
-    }
+    //----//
+
+    private int _playersLoaded = 0;
 
     [Rpc(MultiplayerApi.RpcMode.AnyPeer,CallLocal = true,TransferMode = MultiplayerPeer.TransferModeEnum.Reliable)]
     private void PlayerLoaded()

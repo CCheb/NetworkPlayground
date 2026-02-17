@@ -35,18 +35,6 @@ public partial class NetID : MultiplayerSynchronizer
         {
             config.AddProperty("MultiplayerSynchronizer:OwnerId");
         }
-        /*if (Engine.IsEditorHint())
-        {
-            //RootPath = ".";
-            if(!ReplicationConfig.HasProperty("OwnerId"))
-            {
-                GD.Print("OwnerID Missing!");
-                ReplicationConfig.AddProperty("OwnerId");
-            }
-                    
-            //ReplicationConfig.AddProperty("OwnerId");
-            //ReplicationConfig.AddProperty("IsGood");
-        }*/
     }
 
     public override void _Ready()
@@ -55,8 +43,6 @@ public partial class NetID : MultiplayerSynchronizer
      
         slowStart();
     }
-
-
 
     public async void slowStart()
     {
@@ -85,32 +71,6 @@ public partial class NetID : MultiplayerSynchronizer
                 GetParent().QueueFree();
             }
         }
- 
-        /*GD.Print("After stall in slow start.");
-        if(!GenericCore.Instance.IsServer)
-        {
-            GD.Print("A");
-            try
-            {
-                //UpdateVisibility(0);
-            }
-            catch 
-            {
-                GD.Print("Error occurred on RPC attempt. Deleting");
-                //Already Dead
-                QueueFree();
-            }
-            GD.Print("C");
-        }*/
-
-        /*if(GenericCore.Instance.IsServer && OwnerId ==0)
-        {
-            OwnerId = 1;
-            if (GenericCore.Instance.GetServerNetId() == OwnerId)
-                IsLocal = true;
-            //GenericCore.Instance.RegisterObject(this);
-            SetMultiplayerAuthority(1); // 1 = server
-        }*/
     }
 
     [Rpc(MultiplayerApi.RpcMode.AnyPeer, CallLocal = true, TransferMode = MultiplayerPeer.TransferModeEnum.Reliable)]
@@ -124,19 +84,6 @@ public partial class NetID : MultiplayerSynchronizer
             IsLocal = true;
         EmitSignalNetIdIsReady();
     }
-
-    /*
-    ~NetID()
-    {
-
-        if (Multiplayer.IsServer())
-        {
-            GD.Print("Destroying a network object from the destructor. "+Name);
-            _myNetworkCore.NetDestroyObject(this);
-        }
-    }
-    */
-
 
     [Rpc(MultiplayerApi.RpcMode.AnyPeer, CallLocal = true)]
     public async void ManualDelete()

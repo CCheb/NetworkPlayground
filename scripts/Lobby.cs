@@ -112,20 +112,6 @@ public partial class Lobby : Control
 	{
 		Rpc(MethodName.ChangeToLoadingScreen, "res://scenes/loadingScreen.tscn");
 	}
-
-	
-	/*
-	[Rpc(CallLocal = true,TransferMode = MultiplayerPeer.TransferModeEnum.Reliable)]
-    private void ChangeToLoadingScreen(string gameScenePath)
-    {
-        GD.Print($"Peer {Multiplayer.GetRemoteSenderId()} signaled peer {Multiplayer.GetUniqueId()} to LoadGame");
-        GetTree().ChangeSceneToFile(gameScenePath); 
-    }
-	*/
-	
-	
-	
-
 	
 	[Rpc(CallLocal = true, TransferMode = MultiplayerPeer.TransferModeEnum.Reliable)]
 	private async void ChangeToLoadingScreen(string gameScenePath)
@@ -149,9 +135,6 @@ public partial class Lobby : Control
 			//GenericCore.Instance._netObjectsCount = 0;
 	    }
 
-	    // Wait one frame so Godot fully processes the frees
-	    //await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
-		//await ToSignal(GetTree().CreateTimer(1.0f), "timeout");
 		// Wait for two frames
 		await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
 		await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);

@@ -27,7 +27,7 @@ public partial class IntialPrompt : Control
 
 	private void OnJoinButtonPressed()
 	{
-		if(UsernameEntryBox.Text != null)
+		if(UsernameEntryBox.Text != string.Empty)
 		{	
 			GenericCore.Instance.ParseInitialPromptInfo(UsernameEntryBox.Text, ServerAddressEntryBox.Text, PortNumberAddressEntryBox.Text.ToInt());
 			Error err = GenericCore.Instance.JoinGame();

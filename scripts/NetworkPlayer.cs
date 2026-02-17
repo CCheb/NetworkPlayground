@@ -64,7 +64,6 @@ public partial class NetworkPlayer : CharacterBody3D
 		}
 
 		playerNameTag.Text = GenericCore.Instance._connectedPeers[myNetId.OwnerId]["UserName"];
-		GD.Print(myNetId.OwnerId);
 	}
 
 	 public override void _Input(InputEvent @event)
@@ -97,8 +96,6 @@ public partial class NetworkPlayer : CharacterBody3D
 			// be negative. Thats why we take the screen space rotation and negate it over to world space rotation 
 			input.rotationInput = -motionEvent.Relative.X * 0.1f;
 			input.tiltInput = -motionEvent.Relative.Y * 0.1f;
-
-			GD.Print($"Peer {myNetId.OwnerId}:{Multiplayer.GetUniqueId()} ({input.rotationInput}, {input.tiltInput})");
 		}
     }
 	public override void _PhysicsProcess(double delta)

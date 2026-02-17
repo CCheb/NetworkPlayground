@@ -1,6 +1,8 @@
 using Godot;
 using System;
 using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 
 public partial class Lobby : Control
 {
@@ -135,12 +137,18 @@ public partial class Lobby : Control
 			//GenericCore.Instance._netObjectsCount = 0;
 	    }
 
-		// Wait for two frames
-		await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
-		await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
-
+		
+		await WaitForXFrames(4);
 
 	    GetTree().ChangeSceneToFile(gameScenePath);
 	}
+
+	private async Task WaitForXFrames(int x)
+	{
+		for(int i = 0; i < 4; i++)
+			await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
+	}
+
+	
 
 }

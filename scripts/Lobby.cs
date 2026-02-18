@@ -134,7 +134,6 @@ public partial class Lobby : Control
 	        }
 
 	        GenericCore.Instance._netObjects.Clear();
-			//GenericCore.Instance._netObjectsCount = 0;
 	    }
 
 		
@@ -145,7 +144,7 @@ public partial class Lobby : Control
 
 	private async Task WaitForXFrames(int x)
 	{
-		for(int i = 0; i < 4; i++)
+		for(int i = 0; i < x; i++)
 			await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
 	}
 

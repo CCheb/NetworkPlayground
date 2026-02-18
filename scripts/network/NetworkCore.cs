@@ -40,8 +40,8 @@ public partial class NetworkCore : MultiplayerSpawner
 
         FindRootNodeType(ref rootNode, initialPosition, rotation);
 
-        GetNode(SpawnPath).AddChild(rootNode, true);
-        
+        Spawn(rootNode);
+
         FindRootNodeNetID(rootNode, owner);
         
         EmitSignalPlayerJoined(rootNode);
@@ -75,6 +75,11 @@ public partial class NetworkCore : MultiplayerSpawner
         }
     }
 
+    private void Spawn(Node node)
+    {
+        GetNode(SpawnPath).AddChild(node, true);
+    }
+
     private void FindRootNodeNetID(Node rootNode, long owner)
     {
         foreach (var child in rootNode.GetChildren())
@@ -99,13 +104,12 @@ public partial class NetworkCore : MultiplayerSpawner
     private void NetDestroyObject(long peerId)
     {
         
-        Godot.Collections.Array<int> badObjs = FindBadObjects(peerId);
+        Godot.Collections.Array<int> badObjs = FindBadObjectsWith(peerId);
 
         foreach (var badObj in badObjs)
         {
             try {
-                GenericCore.Instance._netObjects[badObj].GetParent().QueueFree();
-                GenericCore.Instance._netObjects.Remove(badObj);
+                Discard(badObj);
             }
             catch{
                 GD.PushWarning("Notice: Wrong Spawner trying to destroy object.  Not an error.");
@@ -113,7 +117,7 @@ public partial class NetworkCore : MultiplayerSpawner
         }
     }
 
-    private Godot.Collections.Array<int> FindBadObjects(long peerId)
+    private Godot.Collections.Array<int> FindBadObjectsWith(long peerId)
     {
         Godot.Collections.Array<int> badObjs = new();
         foreach (var i in GenericCore.Instance._netObjects.Keys)
@@ -125,6 +129,11 @@ public partial class NetworkCore : MultiplayerSpawner
         return badObjs;
     }
 
+    private void Discard(int badObj)
+    {
+        GenericCore.Instance._netObjects[badObj].GetParent().QueueFree();
+        GenericCore.Instance._netObjects.Remove(badObj);
+    }
     // Destroys a single NetID from the list
     public void NetDestroyObject(NetID netId)
     {
@@ -152,8 +161,7 @@ public partial class NetworkCore : MultiplayerSpawner
             try
             {
                 if (GenericCore.Instance._netObjects[i] != netId) continue;
-                GenericCore.Instance._netObjects[i].GetParent().QueueFree();
-                GenericCore.Instance._netObjects.Remove(i);
+                Discard(i);
             }
             catch
             {

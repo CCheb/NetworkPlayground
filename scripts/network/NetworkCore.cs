@@ -39,9 +39,7 @@ public partial class NetworkCore : MultiplayerSpawner
         Node rootNode = GetNodeFromAutoList(index);
 
         FindRootNodeType(ref rootNode, initialPosition, rotation);
-
         Spawn(rootNode);
-
         FindRootNodeNetID(rootNode, owner);
         
         EmitSignalPlayerJoined(rootNode);
@@ -86,7 +84,6 @@ public partial class NetworkCore : MultiplayerSpawner
         {
             if (child is NetID netId)
             {
-                netId.IsGood = true;
                 netId.Rpc("Initialize", owner);
                 netId._myNetworkCore = this;
                 
@@ -103,7 +100,6 @@ public partial class NetworkCore : MultiplayerSpawner
     // Destroys all netObjects that were owned by the peer
     private void NetDestroyObject(long peerId)
     {
-        
         Godot.Collections.Array<int> badObjs = FindBadObjectsWith(peerId);
 
         foreach (var badObj in badObjs)
@@ -144,7 +140,6 @@ public partial class NetworkCore : MultiplayerSpawner
                 GenericCore.Instance._netObjects.Remove((int)netId.netObjectID);
                 GD.Print("Spawner: " + Name + ", is tring to RPC delete - " + netId.GetParent().Name);
                 netId.ReplicationConfig = null;
-                netId.Rpc("ManualDelete");
             }  
             catch
             {

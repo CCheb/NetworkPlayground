@@ -134,7 +134,7 @@ public partial class Lobby : Control
 	        }
 
 	        GenericCore.Instance._netObjects.Clear();
-	    }
+	    } 
 
 		
 		await WaitForXFrames(4);

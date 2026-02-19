@@ -11,13 +11,13 @@ config_version=5
 [application]
 
 config/name="NetworkPlayground"
-run/main_scene="uid://dlpivbfva1xer"
+run/main_scene="res://scenes/initialPrompt.tscn"
 config/features=PackedStringArray("4.6", "C#", "GL Compatibility")
 config/icon="res://icon.svg"
 
 [autoload]
 
-GenericCore="*uid://du1srhtrwi2yd"
+GenericCore="*res://scripts/network/GenericCore.cs"
 
 [dotnet]
 

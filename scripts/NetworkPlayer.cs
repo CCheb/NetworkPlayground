@@ -13,21 +13,28 @@ public partial class NetworkPlayer : CharacterBody3D
 	private float jumpVelocity = 4.5f;
 	private float speed = 5.0f;
 
-	private Vector3 mouseRotation = Vector3.Zero;
-	private Vector3 cameraRotation = Vector3.Zero;
-	private Vector3 playerRotation = Vector3.Zero;
+	private Vector3 totalMouseRotation = Vector3.Zero;
+	private Vector3 verticalRotation = Vector3.Zero;
+	private Vector3 horizontalRotation = Vector3.Zero;
 
-	private bool mouseInput;
 	// Simple struct to hold our player input data. In this case movement, rotation, and jump
 	private struct PlayerInput
 	{
 		public Vector2 move;
-		public float rotationInput;
-		public float tiltInput;
+		public float yawDelta;
+		public float pitchDelta;
 		public bool jump;
 	}
-
 	PlayerInput input = new PlayerInput();
+
+	public override void _Input(InputEvent @event)
+    {
+        base._Input(@event);
+		if(@event.IsActionPressed("pause") && myNetId.IsLocal)
+		{
+			Input.MouseMode = Input.MouseModeEnum.Visible;
+		}
+    }
 
     public override void _EnterTree()
     {
@@ -50,91 +57,105 @@ public partial class NetworkPlayer : CharacterBody3D
 	private void OnNetIdReady()
 	{
 		if(myNetId.IsLocal)
-		{
-			Camera3D playerCamera = cameraScene.Instantiate<Camera3D>();
-			cameraController.AddChild(playerCamera);
-			Input.MouseMode = Input.MouseModeEnum.Captured;
-			SetPhysicsProcess(true);
-			SetProcessUnhandledInput(true);
-		}
+			SetAsLocalPlayer();
 		else
-		{
-			visor.Visible = true;
-		}
-
-		playerNameTag.Text = GenericCore.Instance._connectedPeers[myNetId.OwnerId]["UserName"];
+			SetAsNonLocalPlayer();
+	
+		SetPlayerNameTag();
 	}
 
-	 public override void _Input(InputEvent @event)
-    {
-        base._Input(@event);
-		if(@event.IsActionPressed("pause") && myNetId.IsLocal)
-		{
-			Input.MouseMode = Input.MouseModeEnum.Visible;
-		}
-    }
+	private void SetAsLocalPlayer()
+	{
+		Camera3D playerCamera = cameraScene.Instantiate<Camera3D>();
+		cameraController.AddChild(playerCamera);
+		Input.MouseMode = Input.MouseModeEnum.Captured;
+		SetPhysicsProcess(true);
+		SetProcessUnhandledInput(true);
+	}
 
+	private void SetAsNonLocalPlayer()
+	{
+		visor.Visible = true;
+	}
+
+	private void SetPlayerNameTag()
+	{
+		playerNameTag.Text = GenericCore.Instance._connectedPeers[myNetId.OwnerId]["UserName"];
+	}
+	
     public override void _UnhandledInput(InputEvent @event)
     {
         base._UnhandledInput(@event);
-		// Determine if the mouse is captured and is moving. Only the local player should be able to set this
-		mouseInput = (@event is InputEventMouseMotion) && (Input.MouseMode == Input.MouseModeEnum.Captured);
 
-		// Screen space to world space
-		if (mouseInput && myNetId.IsLocal)
+		if (CurrentInputIsMouse(@event) && myNetId.IsLocal)
 		{
-			// Grab the MouseMotionEvent 
-			InputEventMouseMotion motionEvent = (InputEventMouseMotion)@event;
-			// Converting mouse movement into radians that we will pass over to the player and camera
-			// In this case we are grabbing the total ammount the mouse moved since the last frame
-			// This is cornverting to radians per pixel (MouseSensitivity). From here we decide to use radians or degrees
-
-			// How much has the mouse moved in the last frame. Convert that into rad / pixel
-
-			// Its important that we negate these values because turning right in screen space is + but in world space will
-			// be negative. Thats why we take the screen space rotation and negate it over to world space rotation 
-			input.rotationInput = -motionEvent.Relative.X * 0.1f;
-			input.tiltInput = -motionEvent.Relative.Y * 0.1f;
+			CalculateRotationDeltas((InputEventMouseMotion)@event);
 		}
     }
+
+	private bool CurrentInputIsMouse(InputEvent @event)
+	{
+		return (@event is InputEventMouseMotion) && (Input.MouseMode == Input.MouseModeEnum.Captured);
+	}
+
+	private void CalculateRotationDeltas(InputEventMouseMotion mouseMotion)
+	{
+		// Screen space to world space (2D -> 3D)!!!
+
+		// Its important that we negate these values because turning right in screen space is + but in world space will
+		// be negative. Thats why we take the screen space rotation and negate it over to world space rotation 
+		input.yawDelta = -mouseMotion.Relative.X * 0.1f;
+		input.pitchDelta = -mouseMotion.Relative.Y * 0.1f;
+	}
+
 	public override void _PhysicsProcess(double delta)
 	{
 		if(myNetId.IsLocal)
 		{
-			// Simply grab the input and pass it forward for calculation
-			Vector2 move = Input.GetVector("move_left", "move_right", "move_up", "move_down");
-    		bool jump = Input.IsActionPressed("jump");
-
-			RpcId(SERVER, MethodName.SendInput, move, jump, input.rotationInput, input.tiltInput);
-
-			input.rotationInput = 0.0f;
-			input.tiltInput = 0.0f;
+			GenerateAndSendMovementInput();
+			ResetRotationDeltas();
 		}	
 
-		
-		if(!GenericCore.Instance.IsServer)
-			return;
+		if(GenericCore.Instance.IsServer)
+			ApplyInput(delta);
+	}
 
-		ApplyInput(delta);
-		
+	private void GenerateAndSendMovementInput()
+	{
+		// Simply grab the input and pass it forward for calculation
+		Vector2 move = Input.GetVector("move_left", "move_right", "move_up", "move_down");
+    	bool jump = Input.IsActionPressed("jump");
+		RpcId(SERVER, MethodName.SendInput, move, jump, input.yawDelta, input.pitchDelta);
+	}
+
+	private void ResetRotationDeltas()
+	{
+		input.yawDelta = 0.0f;
+		input.pitchDelta = 0.0f;
 	}
 
 	[Rpc(MultiplayerApi.RpcMode.AnyPeer, CallLocal = false, TransferMode = MultiplayerPeer.TransferModeEnum.Unreliable)]
-	private void SendInput(Vector2 move, bool jump, float rotationInput, float tiltInput)
+	private void SendInput(Vector2 move, bool jump, float yawDelta, float pitchDelta)
 	{
 		if(!GenericCore.Instance.IsServer)
 			return;
 
+		// From client to client representation on the server side
 		input.move = move;
 		input.jump = jump;
-		input.rotationInput = rotationInput;
-		input.tiltInput = tiltInput;
-
+		input.yawDelta = yawDelta;
+		input.pitchDelta = pitchDelta;
 	}
 
 	private void ApplyInput(double delta)
 	{
-		// The rest is default movement code
+		
+		CalculateMovement(delta);
+		CalculateRotations(delta);
+	}
+
+	private void CalculateMovement(double delta)
+	{
 		Vector3 velocity = Velocity;
 
 		// Add the gravity.
@@ -154,27 +175,34 @@ public partial class NetworkPlayer : CharacterBody3D
 		velocity.Z = direction.Z * speed;
 
 		Velocity = velocity;
-		// MoveAndSlide is the function that actually calculates/simulates the movement 
+
+		// Calculates/simulates the movement 
 		MoveAndSlide();
-
-		// Horizontal rotation. The Vertical rotation is strictly for the camera and we send those values over to it
-		// need a variable to persist throughout rotations
-		mouseRotation.Y += input.rotationInput * (float)delta;
-
-		// Form vectors to be applied to the player and camera rotations respectively
-		// If we look horizontally we want the player to rotate which will rotate the camera with it since its a child
-		playerRotation = new Vector3(0.0f, mouseRotation.Y, 0.0f);
-
-		// Player rotation, want horizontal rotation
-		Basis = Basis.FromEuler(playerRotation);
-
-
-		// Its important that mouseRotation collects the rotation inputs instead of being set by them.
-		mouseRotation.X += input.tiltInput * (float)delta;
-		mouseRotation.X = Mathf.Clamp(mouseRotation.X, Mathf.DegToRad(-90.0f), Mathf.DegToRad(90.0f));
-		cameraRotation = new Vector3(mouseRotation.X, 0.0f, 0.0f);
-
-		cameraController.Rotation = cameraRotation;
-		visor.Rotation = cameraRotation;
 	}
+
+	private void CalculateRotations(double delta)
+	{
+		RotatePlayer(delta);
+		RotateCamera(delta);
+	}
+
+	private void RotatePlayer(double delta)
+	{
+		// Player rotation, want horizontal rotation
+		totalMouseRotation.Y += input.yawDelta * (float)delta; // Parse total mouse rotation.
+		horizontalRotation = new Vector3(0.0f, totalMouseRotation.Y, 0.0f);
+		Basis = Basis.FromEuler(horizontalRotation);
+	}
+
+	private void RotateCamera(double delta)
+	{
+		// Camera rotation, want vertical rotation
+		totalMouseRotation.X += input.pitchDelta * (float)delta; // Parse total mouse rotation
+		totalMouseRotation.X = Mathf.Clamp(totalMouseRotation.X, Mathf.DegToRad(-90.0f), Mathf.DegToRad(90.0f));
+		verticalRotation = new Vector3(totalMouseRotation.X, 0.0f, 0.0f);
+
+		cameraController.Rotation = verticalRotation;
+		visor.Rotation = verticalRotation;	// In the case the current NetworkPlayer does not have a camera
+	}
+	
 }

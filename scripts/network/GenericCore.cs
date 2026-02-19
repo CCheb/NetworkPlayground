@@ -170,6 +170,7 @@ public partial class GenericCore : Node
 
     public void RegisterObject(NetID netId)
     {
+        // Server is the peer that can see all the valid netObjects
         netId.netObjectID = (uint)Instance._netObjects.Count;
         Instance._netObjects.Add(Instance._netObjects.Count, netId);
     }

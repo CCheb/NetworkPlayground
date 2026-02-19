@@ -45,7 +45,6 @@ public partial class NetworkPlayer : CharacterBody3D
     {	
         base._Ready();
 		myNetId.NetIdIsReady += OnNetIdReady;
-		
     }
 
 	private void OnNetIdReady()

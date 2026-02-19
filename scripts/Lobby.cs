@@ -52,7 +52,7 @@ public partial class Lobby : Control
     	if (clientsConnected < 2 || gameStarted)
     	    return;
 	
-    	if (!AllPlayersReady())
+    	if (!AllPlayersReady())	// Need All players to press ready before proceeding
     	{
     	    ResetCountDown();
     	    return;
@@ -62,31 +62,32 @@ public partial class Lobby : Control
     	    return;
 	
     	countdownRunning = true;
-	
     	while (countDown >= 0)
     	{
 			countDownLabel.Visible = true;
-    	    countDownLabel.Text = countDown.ToString();
-    	    await ToSignal(GetTree().CreateTimer(1.0f), "timeout");
-	
-    	    if (!AllPlayersReady())
-    	    {
-    	        ResetCountDown();
-    	        countdownRunning = false;
-    	        return;
-    	    }
-	
-    	    countDown--;
+    		countDownLabel.Text = countDown.ToString();
+    		await ToSignal(GetTree().CreateTimer(1.0f), "timeout");
+
+    		if (!AllPlayersReady())
+    		{
+    		    ResetCountDown();
+    		    countdownRunning = false;
+    		    return;
+    		}
+
+    		countDown--;
     	}
 	
     	gameStarted = true;
+
     	GD.Print("Game Started!");
 		
 		LoadGame();
 	}
 
 	private bool AllPlayersReady()
-	{
+	{	
+		// Assume everyone is ready 
 		bool lobbyReady = true;
 		foreach(UserNpm player in lobby.GetChildren())
 		{	
@@ -119,27 +120,30 @@ public partial class Lobby : Control
 	private async void ChangeToLoadingScreen(string gameScenePath)
 	{
 	    GD.Print($"Peer {Multiplayer.GetRemoteSenderId()} signaled peer {Multiplayer.GetUniqueId()} to LoadGame");
-
-	    if (GenericCore.Instance != null)
-	    {
-	        // Copy list to avoid modifying while iterating
-	        var objects = GenericCore.Instance._netObjects.Values.ToList();
-
-	        foreach (var netId in objects)
-	        {
-	            if (netId != null && IsInstanceValid(netId) && netId.GetParent() != null)
-	            {
-	                netId.GetParent().QueueFree();
-	            }
-	        }
-
-	        GenericCore.Instance._netObjects.Clear();
-	    } 
-
 		
+	    if (GenericCore.Instance.IsServer)
+	    {
+			DiscardNetworkObjects();
+	    } 
+		
+		// Since clients dont have netObjects we could also wait for the server before proceeding
 		await WaitForXFrames(4);
 
 	    GetTree().ChangeSceneToFile(gameScenePath);
+	}
+
+	private void DiscardNetworkObjects()
+	{
+		// Server is the only peer that can see the valid _netObjects
+	    var objects = GenericCore.Instance._netObjects.Values.ToList();
+	    foreach (var netId in objects)
+	    {
+	        if (netId != null && IsInstanceValid(netId) && netId.GetParent() != null)
+	        {
+	            netId.GetParent().QueueFree();
+	        }
+	    }
+	    GenericCore.Instance._netObjects.Clear();
 	}
 
 	private async Task WaitForXFrames(int x)
